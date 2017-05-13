@@ -1,0 +1,147 @@
+var cheerio = require('cheerio');
+var sanitizer = require('sanitizer');
+//var htmlparser = require("htmlparser2");
+var htmlToText = require('html-to-text');
+
+
+var getImgSrcFromContentEncoded = function (contentEncoded, hostName) {
+  	var str = contentEncoded;
+	
+  	if (!str || (str == null)) return;
+  	
+    var re = /\ssrc=(?:(?:'([^']*)')|(?:"([^"]*)")|([^\s]*))/i; // match src='a' OR src="a" OR src=a
+    var res = str.match(re);
+    var src = res[1]||res[2]||res[3]; // get the one that matched
+
+  	//console.log(src)
+  	if (!src) return;
+
+    if (src.indexOf(hostName) == -1) {
+      src = hostName + src;
+    }  
+  	return src;
+};
+
+var getImgOnMouseOverSrcFromContentEncoded = function (contentEncoded, hostName) {
+  	var str = contentEncoded;
+   	//console.log("str == " + str);
+  	if (!str || (str == null)) return;
+
+    var pattern = / on\w+="[^"]*"/g
+    var onmouse = str.match(pattern);
+    if (onmouse) {
+	    //console.log("onmouse[0] == " + onmouse[0]);
+	    var re =  /this.*?src='(.*?)'/;
+	    var res0 = onmouse[0].match(re);
+	    //console.log("res0 == " + hostName + res0[1]);
+	    //console.log("onmouse[1] == " + onmouse[1]);
+	    var re =  /this.*?src='(.*?)'/;
+	    var res1 = onmouse[1].match(re);
+	    //console.log("res1 == " + res1[1]);
+	    var res = [hostName + res0[1], res1[1]];
+	    //console.log("res == " + res);
+  		return res;
+  	}
+};
+
+
+var FeedProcessing = function () {};
+
+FeedProcessing.prototype.createIdKeyFromHash = function (jsonString) {
+    var jsonObjectWithId = jsonString.map(function(item, index) {
+        //console.log(index);
+        item['id'] = index;
+        return item;
+    });
+    return jsonObjectWithId;
+};
+
+FeedProcessing.prototype.createOneLineBasedTitleKeyFromSummary = function (jsonString, maxLength) {
+	var jsonObjectWithTitle = jsonString.map(function(item) {
+	var title = item['title'];
+	title = title.replace(/« /g, '');
+	title = title.replace(/ »/g, '');
+		if (title.length > maxLength) {
+			title = title.substr(0, maxLength);
+			title += '...';
+		}
+		item['oneLineBasedTitle'] = title;
+		return item;
+	});
+	return jsonObjectWithTitle;
+};
+
+FeedProcessing.prototype.overrideDescriptionKey = function (jsonString) {
+	var jsonObjectWithOverridenDescription = jsonString.map(function(item) {
+	var description;
+		var dirtyDescription = item['description'];
+		var cleanedDescription = sanitizer.sanitize(dirtyDescription);
+		description = htmlToText.fromString(cleanedDescription, {
+/*			wordwrap: 130		*/
+		});
+		item['description'] = description;
+		return item;
+	});
+	return jsonObjectWithOverridenDescription;
+};
+
+
+FeedProcessing.prototype.createShortSynopsisKeyFromSummary = function(jsonString) {
+	var jsonObjectWithSynopsis = jsonString.map(function(item) {
+	var synopsisTitle, synopsisParagraph;
+		var dirtySummary = item['summary'];
+		//console.log(dirtySummary);
+		var $ = cheerio.load(dirtySummary);
+		$('br.autobr').each(function(i, elem) {
+			synopsisTitle = $(elem)['0'].prev.data;
+			dirtySummary = $(elem)['0'].next.data;
+			//console.log(synopsisTitle);
+			//console.log('\n\n' + i + '\n\n');
+			//synopsisParagraph = $(elem)['0'].parent.children[0].data;
+			//console.log(synopsisParagraph);
+		});
+		var cleanedSummary = sanitizer.sanitize(dirtySummary);
+		synopsisParagraph = htmlToText.fromString(cleanedSummary, {
+/*			wordwrap: 130		*/
+		});
+		//console.log(cleanedSummary);
+
+		item['synopsisTitle'] = synopsisTitle;
+
+        var MAX = 200;
+        var i = 0;
+        var descriptionParagraphArray = [];
+        while (synopsisParagraph.length > MAX) {
+            while (synopsisParagraph.charAt(i) !== '.') {
+                i++;
+            }
+            descriptionParagraphArray.push(synopsisParagraph.substring(0, i+1));
+            synopsisParagraph = synopsisParagraph.substring(i+1);
+            i = MAX;
+        }
+
+		item['synopsisParagraphArray'] = descriptionParagraphArray;
+		//console.log(synopsisParagraph);
+		return item;
+	});
+	return jsonObjectWithSynopsis;
+};
+
+
+FeedProcessing.prototype.createImageKeyFromContentEncoded = function(jsonString, hostName) {
+	var jsonObjectWithImage = jsonString.map(function(item) {
+		var contentEncoded = item['content:encoded']['#'];
+		var imgSrcArray = getImgSrcFromContentEncoded(contentEncoded, hostName);
+		var imgOnMouseSrcArray = getImgOnMouseOverSrcFromContentEncoded(contentEncoded, hostName);
+		//item['image'] = srcArray.concat()srcArrayOld;
+		//item['imageOld'] = srcArrayOld;
+		//console.log("imgSrcArray == " + imgSrcArray);
+		//console.log("imgOnMouseSrcArray == " + imgOnMouseSrcArray);
+		item['image'] = imgOnMouseSrcArray || [imgSrcArray];
+		console.log("item['image'] == " + item['image']);
+		return item;
+	});
+	return jsonObjectWithImage;
+};
+
+exports.FeedProcessing = new FeedProcessing();
