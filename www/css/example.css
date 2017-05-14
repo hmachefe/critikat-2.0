@@ -27,9 +27,6 @@ header div {
 	margin-top: 10px;
 }
 
-a {
-	color: cyan;
-}
 
 article {
 	display: inline-block;
@@ -85,4 +82,3 @@ ul {
 	ul li:nth-child(odd) {
 		background: #fff;
 	}
-
