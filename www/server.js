@@ -13,7 +13,7 @@ var sanitizer = require('sanitizer');
 var htmlToText = require('html-to-text');
 var feedProcessing = require('./server/feedProcessing.js').FeedProcessing;
 
-var CRITIKAT_RSS_FEED_MONITORING_PERIOD = 15 * 1000;
+var CRITIKAT_RSS_FEED_MONITORING_PERIOD = 24 * 1000;
 var CRITIKAT_FEED_TITLE_MAX_LENGTH = 18;
 var CRITIKAT_HOST_SERVER_PORT = 8084;
 
@@ -60,21 +60,30 @@ function requestXmlFromCritikat() {
 		console.log("BEFORE calling... createImageKeyFromContentEncoded");
 		feedProcessing.createImageKeyFromContentEncoded(jsonWithSynopsisKey).then(function(response) {
 		  	//console.log("Success!", response.slice(0,32));
-					var res = response.slice(1, 32);
-					console.log("Success!  res[0]['imageSmall'] ==  " + JSON.stringify(res[0]['image']));
+					//var res = response.slice(1, 32);
+					//console.log("Success!  res[0]['imageSmall'] ==  " + JSON.stringify(res[0]['imageSmall']));
 					fs.exists(critikatLocalJsonFileName, function(exists) {
 					  if(exists) {
-						//Show in green
-						console.log('File exists. Deleting now ...');
-						fs.unlink(critikatLocalJsonFileName);
+							//Show in green
+							console.log('File exists. Deleting now ...');
+							fs.unlink(critikatLocalJsonFileName);
 					  } else {
-						//Show in red
-						console.log('File not found, so not deleting.');
+							//Show in red
+							console.log('File not found, so not deleting.');
 					  }
 
 					  fs.writeFile(critikatLocalJsonFileName, JSON.stringify(response), function (err) {
-						if (err) return //console.log(err);
-						console.log('json a été écrit');
+							if (err) return console.log(err);
+							for (var index=0; index<response.length; index++){
+										//console.log("IN... for (var index=0; index<lengthArray; index++){");
+                    console.log(" ...    index == ", index);
+                    console.log(" ...    response[index]['guid'] == ", response[index]['guid']);
+                    console.log(" ...    response[index]['title'] == ", response[index]['title']);
+                    console.log(" ...    response[index]['imageBig'] == ", response[index]['imageBig']);
+                    console.log(" ...    response[index]['imageSmall'] == ", response[index]['imageSmall']);
+										console.log(" ... ");
+							}
+							console.log('json a été écrit');
 					  });
 
 					});
@@ -123,11 +132,11 @@ var SampleApp = function() {
      */
     self.populateCache = function() {
         if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
+            self.zcache = { 'www/index.html': '' };
         }
 
         //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
+        self.zcache['www/index.html'] = fs.readFileSync('./www/index.html');
     };
 
 

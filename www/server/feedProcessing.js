@@ -138,6 +138,8 @@ FeedProcessing.prototype.createShortSynopsisKeyFromSummary = function(jsonString
 
 var indexPromises = 0;
 var lengthArray = 0;
+var requests = [];
+
 FeedProcessing.prototype.createImageKeyFromContentEncoded = function(jsonString) {
 
   var jsonStringArray = JSON.parse(jsonString);
@@ -146,45 +148,60 @@ FeedProcessing.prototype.createImageKeyFromContentEncoded = function(jsonString)
   return new Promise(function (resolve, reject) {
     //console.log("IN... return new Promise(function (resolve, reject) { ");
     for (var index=0; index<lengthArray; index++){
-      //console.log("IN... for (var index=0; index<lengthArray; index++){");
-      var item = jsonStringArray[index];
-      var url = item['guid'];
+          //console.log("IN... for (var index=0; index<lengthArray; index++){");
+          var url =   jsonStringArray[index]['guid'];
+          console.log("createImageKeyFromContentEncoded  index == " + index);
+          console.log("createImageKeyFromContentEncoded  jsonStringArray[index]['title'] == " + jsonStringArray[index]['title']);
+          var options = {
+            index: index,
+      	    url: url,
+      	    headers: {
+      	      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+      	      'Referer': 'http://www.critikat.com/'
+      	    }
+      	  };
 
-      var options = {
-  	    url: url,
-  	    headers: {
-  	      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-  	      'Referer': 'http://www.critikat.com/'
-  	    }
-  	  };
+          (function(param) {
+            var req = request(param, function (error, response, body) {
+                if (error) return reject(error) //
+                var $ = cheerio.load(body);
+                jsonStringArray[param.index]['index'] = param.index;         
+                console.log("------");
+                console.log('(function(param) {   ...    param.index == ', param.index, 'lengthArray == ', lengthArray, 'indexPromises == ', indexPromises, 'jsonStringArray[param.index]["guid"] == ', jsonStringArray[param.index]["guid"]);
+                //if (param.index === 11) {
+                    console.log('(function(param) {   ...     body.indexOf("attachment-bones-article size-bones-article wp-post-image" == ', body.indexOf("attachment-bones-article size-bones-article wp-post-image"));
+                //}
+                if (param.index === 11) {
+                  //console.log('(function(param) {   ...     body" == ', body);
+                }
+                //console.log("IN... for (var index=0; index<len; index++){     body == " + body);
+                $('img.attachment-bones-article.size-bones-article.wp-post-image').each(function () {
+                    console.log("________________________________________________________________________");
+                    console.log('(function(param) {   ...    param.index == ', param.index, 'lengthArray == ', lengthArray, 'indexPromises == ', indexPromises);
+                    jsonStringArray[param.index]['imageBig'] = $(this).attr('src');
+                    jsonStringArray[param.index]['imageSmall'] = jsonStringArray[param.index]['imageBig'].replace("-980x0.jpg", "-125x125-c.jpg");
 
-      //console.log("IN... for (var index=0; index<len; index++){     url == " + url);
-      request(options, function (error, response, body) {
-          if (error) return reject(error) //
-          var $ = cheerio.load(body);
-          //console.log("IN... for (var index=0; index<len; index++){     body == " + body);
-          $('img.attachment-bones-article.size-bones-article.wp-post-image').each(function () {
-              //console.log("BINGOOOOO  $(this).src == " + $(this).attr('src'));
-              jsonStringArray[indexPromises]['imageBig'] = $(this).attr('src');
-              jsonStringArray[indexPromises]['imageSmall'] = jsonStringArray[indexPromises]['imageBig'].replace("-980x0.jpg", "-125x125-c.jpg");
+                    //console.log("BINGOOOOO  item['image'] == " + item['image']);
+                    console.log("BINGOOOOO  jsonStringArray[param.index]['guid'] == " + jsonStringArray[param.index]['guid']);
+                    console.log("BINGOOOOO  jsonStringArray[param.index]['title'] == " + jsonStringArray[param.index]['title']);
+                    console.log("BINGOOOOO  jsonStringArray[param.index]['imageBig'] == " + jsonStringArray[param.index]['imageBig']);
+                    console.log("BINGOOOOO  jsonStringArray[param.index]['imageSmall'] == " + jsonStringArray[param.index]['imageSmall']);
+                    console.log("________________________________________________________________________");
+                });//$('img.attachment-bones-article.size-bones-article.wp-post
+                indexPromises++;
+                //console.log("indexPromises == " + indexPromises);
+                //console.log("length-1 == " + (lengthArray-1));
+                if (indexPromises === (lengthArray)) {
+                  //console.log("BINGOOOOO000000000000000000000000000000000000000000000");
+                  resolve(jsonStringArray);
+                  indexPromises = 0;
+                }
+            });//var req = request(options, function (error, response, body) {
+          })(options);
 
-              //console.log("BINGOOOOO  item['image'] == " + item['image']);
-              console.log("BINGOOOOO  jsonStringArray[indexPromises] == " + jsonStringArray[indexPromises]);
-              console.log("BINGOOOOO  jsonStringArray[indexPromises]['image'] == " + jsonStringArray[indexPromises]['image']);
-              console.log("BINGOOOOO  indexPromises == " + indexPromises);
-              indexPromises++;
-              //console.log("indexPromises == " + indexPromises);
-              //console.log("length-1 == " + (lengthArray-1));
-              if (indexPromises === (lengthArray-1)) {
-                //console.log("BINGOOOOO000000000000000000000000000000000000000000000");
-                resolve(jsonStringArray);
-                indexPromises = 0;
-              }
-          });
-      });
-    }
-  })
+    }//for ...
+  }); //return new Promise(function (resolve, reject) {
 
-};
+};//createImageKeyFromContentEncoded
 
 exports.FeedProcessing = new FeedProcessing();

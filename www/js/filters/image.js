@@ -3,7 +3,7 @@ angular.module('starter')
     return function (author) {
 		var authorImages = {
 			"Juliette Goffart": "JulietteGoffart.jpg",
-			"Fabien Reyre": "FabienReyre.jpeg",
+			"Fabien Reyre": "FabienReyre.jpg",
 			"Axel Scoffier": "AxelScoffier.jpg",
 			"Marie Gueden": "MarieGueden.jpg",
       "Ophélie Wiel": "OphelieWiel.jpg",
