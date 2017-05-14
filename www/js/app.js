@@ -1,3 +1,27 @@
+//AIzaSyBdMDakLVL3KOzkHUD-8cJo-Z2ys_WEqbo
+
+function init() {
+  gapi.client.setApiKey('AIzaSyBdMDakLVL3KOzkHUD-8cJo-Z2ys_WEqbo');
+  gapi.client.load("youtube", "v3", function() {
+      //yt api is ready
+      console.log("readyy");
+      var request = gapi.client.youtube.search.list(
+        {
+            part: "snippet",
+            type: "video",
+            q: "Alien: Convenant",
+            maxResults: 3
+        }
+      );
+      request.execute(function (response) {
+          var videoId = response.items[0].id.videoId;
+          console.log("videoId == " + videoId);
+          var iframe = document.querySelector("iframe");
+          //iframe.src = "http://www.youtube.com/embed/" + videoId;
+      });
+  });
+}
+
 // Ionic Starter App
 
 // angular.module is a global place for creating, registering and retrieving Angular modules

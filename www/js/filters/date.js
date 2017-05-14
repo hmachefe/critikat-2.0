@@ -9,6 +9,9 @@ angular.module('starter')
   			var monthsList = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout" , "Septembre", "Octobre", "Novembre", "Décembre"];
   			var newDayInteger = newDate.getDay() - 1;
   			var newDayString = daysList[newDayInteger];
+        if (newDayInteger == 1) {
+          newDayInteger = "1er";
+        }
   			var newMonthInteger = newDate.getMonth();
   			var newMonthString = monthsList[newMonthInteger];
   			var newYear = newDate.getFullYear();

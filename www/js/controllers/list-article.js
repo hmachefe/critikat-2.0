@@ -2,7 +2,7 @@
 var DEVICE_WIDTH_THRESHOLD = 412;
 
 // THIS DOESN'T WORK
-angular.module('starter.controllers')
+var app = angular.module('starter.controllers')
 .controller('lastArticlesCtrl', function($scope, ArticlesFactory, $timeout, $ionicLoading) {
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -105,6 +105,7 @@ angular.module('starter.controllers')
   */
 
   $scope.viewDetail = function(entry) {
+    debugger;
     $scope.setCurrEntry(entry);
     $location.path('/detail');
   }
@@ -134,10 +135,61 @@ angular.module('starter.controllers')
   };
 
 
+});
+
+
+app.service('commonService', function() {
+    var data = {};
+    this.getData = function () {
+        //debugger;
+        return data;
+    }
+    this.setData = function (dataToSet) {
+        //debugger;
+        data = dataToSet;
+    }
+});
+
+
+app.controller('lastArticleDetailCtrl', function($scope, $stateParams, ArticlesFactory, commonService) {
+  //$scope.article = { }
+  $scope.article = ArticlesFactory.get($stateParams.articleId);
+  //debugger;
+  gapi.client.load("youtube", "v3", function() {
+      //yt api is ready
+      console.log("readyy");
+      var request = gapi.client.youtube.search.list(
+        {
+            part: "snippet",
+            type: "video",
+            q: $scope.article.title,
+            maxResults: 3
+        }
+      );
+      request.execute(function (response) {
+          var videoId = response.items[0].id.videoId;
+          console.log("videoId == " + videoId);
+          var iframe = document.querySelector("iframe");
+          //iframe.src = "http://www.youtube.com/embed/" + videoId;
+          $scope.article.videoFrameUrlId = "http://www.youtube.com/embed/" + videoId;
+          commonService.setData($scope.article);
+      });
+  });
 })
 
 
-.controller('lastArticleDetailCtrl', function($scope, $stateParams, ArticlesFactory) {
-  $scope.article = ArticlesFactory.get($stateParams.articleId);
+.controller('teaserCtrl', function($scope, $stateParams, $sce, commonService) {
+  $scope.getArticleTitle = function() {
+    //debugger;
+    var article = commonService.getData();
+    //debugger;
+    return article.title;
+  };
+  $scope.getArticleVideoFrameUrlId = function() {
+    //debugger;
+    var article = commonService.getData();
+    console.log('getArticleVideoFrameUrlId  :  article.videoFrameUrlId == ', article.videoFrameUrlId);
+    return $sce.trustAsResourceUrl(article.videoFrameUrlId);
+  }
 })
 ;
