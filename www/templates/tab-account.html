@@ -1,8 +1,8 @@
 <ion-view ng-controller="teaserCtrl" title='<img class="title-image" src="../img/ck.png" /> <span class="logo">Teasers</span>' >
   <ion-content>
-	  <h2 class="title">hhh + {{getArticleTitle()}}</h2>
+	  <h2 class="title">{{getArticleTitle()}}</h2>
 	  <center>
-        <IFRAME width="600px" id="iframe" style="border 3px solid; background-color: orange;" src="{{getArticleVideoFrameUrlId()}}"/>
+        <IFRAME id="iframe" style="width: 94%; border 3px solid; background-color: orange;" src="{{getArticleVideoFrameUrlId()}}"/>
 	  </center>
   </ion-content>
 </ion-view>
